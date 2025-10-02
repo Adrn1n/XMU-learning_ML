@@ -130,16 +130,13 @@ print(f"9阶多项式 - 训练集MSE: {poly9_train_mse:.4f}, 测试集MSE: {poly
 """
 5.4
 """
-lr = 7.5e-2
-epoch = 200
-eps = 1e-6
 
 
 def model(x, theta):
     return np.vander(x, theta.shape[-1], increasing=True) @ theta
 
 
-def loss(x, theta, y):
+def loss_mse(x, theta, y):
     return calculate_mse(model(x, theta), y)
 
 
@@ -157,23 +154,28 @@ def cal_grad(f, X, eps):
     return grad
 
 
-def train(x_train, y_train, theta, x_test, y_test, lr, epoch, eps):
+def train(x_train, y_train, theta, x_test, y_test, loss, lr, epoch, eps):
     losses_train = []
     losses_test = []
     for _ in range(epoch):
-        losses_train.append(loss(x_train, theta, y_train))
-        losses_test.append(loss(x_test, theta, y_test))
-        grad = cal_grad(lambda theta_: loss(x_train, theta_, y_train), theta, eps)
+        losses_train.append(loss_mse(x_train, theta, y_train))
+        losses_test.append(loss_mse(x_test, theta, y_test))
+        grad = cal_grad(loss, theta, eps)
         theta -= lr * grad / np.linalg.norm(grad)
     return theta, losses_train, losses_test
 
 
 fig = plt.figure(figsize=(18, 5))
 
+loss = lambda theta_: loss_mse(x_train, theta_, y_train)
+lr = 7.5e-2
+epoch = 200
+eps = 1e-6
+
 n = 1
 theta = np.random.randn(n + 1)
 theta, losses_train, losses_test = train(
-    x_train, y_train, theta, x_test, y_test, lr, epoch, eps
+    x_train, y_train, theta, x_test, y_test, loss, lr, epoch, eps
 )
 print(f"n = {n}, theta = {theta}")
 plt.subplot(1, 3, 1)
@@ -202,7 +204,7 @@ plt.legend()
 n = 3
 theta = np.random.randn(n + 1)
 theta, losses_train, losses_test = train(
-    x_train, y_train, theta, x_test, y_test, lr, epoch, eps
+    x_train, y_train, theta, x_test, y_test, loss, lr, epoch, eps
 )
 print(f"n = {n}, theta = {theta}")
 plt.subplot(1, 3, 2)
@@ -231,7 +233,7 @@ plt.legend()
 n = 9
 theta = np.random.randn(n + 1)
 theta, losses_train, losses_test = train(
-    x_train, y_train, theta, x_test, y_test, lr, epoch, eps
+    x_train, y_train, theta, x_test, y_test, loss, lr, epoch, eps
 )
 print(f"n = {n}, theta = {theta}")
 plt.subplot(1, 3, 3)
@@ -257,5 +259,93 @@ plt.ylabel("Loss (LMSE)")
 plt.grid(True, alpha=0.3)
 plt.legend()
 
+plt.tight_layout()
+plt.show()
+
+"""
+5.6
+"""
+n = 9
+
+
+def J_L2(lambda_l2, *args):
+    return loss_mse(*args) + lambda_l2 * np.linalg.norm(args[1])
+
+
+lr = 5e-2
+epoch = 1000
+eps = 1e-6
+
+fig = plt.figure(figsize=(8, 6))
+
+lambda_l2 = 0
+loss = lambda theta_: J_L2(lambda_l2, x_train, theta_, y_train)
+theta = np.random.randn(n + 1)
+theta, _, _ = train(x_train, y_train, theta, x_test, y_test, loss, lr, epoch, eps)
+print(f"lambda = {lambda_l2}, theta = {theta}")
+plt.subplot(2, 2, 1)
+plt.scatter(x_train, y_train, c="blue", alpha=0.6, label="train points")
+plt.scatter(x_test, y_test, c="green", alpha=0.6, label="test points")
+plt.plot(x_plot, model(x_plot, theta), "r-", label=f"J_L2 fit")
+plt.plot(x_plot, true_function(x_plot), "k--", label="ground truth")
+plt.title(f"lambda = {lambda_l2}")
+plt.xlabel("x")
+plt.ylabel("y")
+plt.ylim(0, 3.5)
+plt.grid(True, alpha=0.3)
+plt.legend()
+
+lambda_l2 = 1e-3
+loss = lambda theta_: J_L2(lambda_l2, x_train, theta_, y_train)
+theta = np.random.randn(n + 1)
+theta, _, _ = train(x_train, y_train, theta, x_test, y_test, loss, lr, epoch, eps)
+print(f"lambda = {lambda_l2}, theta = {theta}")
+plt.subplot(2, 2, 2)
+plt.scatter(x_train, y_train, c="blue", alpha=0.6, label="train points")
+plt.scatter(x_test, y_test, c="green", alpha=0.6, label="test points")
+plt.plot(x_plot, model(x_plot, theta), "r-", label=f"J_L2 fit")
+plt.plot(x_plot, true_function(x_plot), "k--", label="ground truth")
+plt.title(f"lambda = {lambda_l2}")
+plt.xlabel("x")
+plt.ylabel("y")
+plt.ylim(0, 3.5)
+plt.grid(True, alpha=0.3)
+plt.legend()
+
+lambda_l2 = 1
+loss = lambda theta_: J_L2(lambda_l2, x_train, theta_, y_train)
+theta = np.random.randn(n + 1)
+theta, _, _ = train(x_train, y_train, theta, x_test, y_test, loss, lr, epoch, eps)
+print(f"lambda = {lambda_l2}, theta = {theta}")
+plt.subplot(2, 2, 3)
+plt.scatter(x_train, y_train, c="blue", alpha=0.6, label="train points")
+plt.scatter(x_test, y_test, c="green", alpha=0.6, label="test points")
+plt.plot(x_plot, model(x_plot, theta), "r-", label=f"J_L2 fit")
+plt.plot(x_plot, true_function(x_plot), "k--", label="ground truth")
+plt.title(f"lambda = {lambda_l2}")
+plt.xlabel("x")
+plt.ylabel("y")
+plt.ylim(0, 3.5)
+plt.grid(True, alpha=0.3)
+plt.legend()
+
+lambda_l2 = 1e2
+loss = lambda theta_: J_L2(lambda_l2, x_train, theta_, y_train)
+theta = np.random.randn(n + 1)
+theta, _, _ = train(x_train, y_train, theta, x_test, y_test, loss, lr, epoch, eps)
+print(f"lambda = {lambda_l2}, theta = {theta}")
+plt.subplot(2, 2, 4)
+plt.scatter(x_train, y_train, c="blue", alpha=0.6, label="train points")
+plt.scatter(x_test, y_test, c="green", alpha=0.6, label="test points")
+plt.plot(x_plot, model(x_plot, theta), "r-", label=f"J_L2 fit")
+plt.plot(x_plot, true_function(x_plot), "k--", label="ground truth")
+plt.title(f"lambda = {lambda_l2}")
+plt.xlabel("x")
+plt.ylabel("y")
+plt.ylim(0, 3.5)
+plt.grid(True, alpha=0.3)
+plt.legend()
+
+plt.suptitle(f"n = {n}, with regularization")
 plt.tight_layout()
 plt.show()
