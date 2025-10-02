@@ -2,13 +2,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # 设置中文显示
-plt.rcParams["font.family"] = ["SimHei", "WenQuanYi Micro Hei", "Heiti TC"]
+plt.rcParams["font.family"] = [
+    "STHeiti",
+    # "SimHei",
+    # "WenQuanYi Micro Hei",
+    # "Heiti TC",
+]
 plt.rcParams["axes.unicode_minus"] = False  # 正确显示负号
 
 
 # 定义真实函数: x³ - 3x² + 2x + 1
 def true_function(x):
-    return x ** 3 - 3 * x ** 2 + 2 * x + 1
+    return x**3 - 3 * x**2 + 2 * x + 1
 
 
 # 生成原始数据
@@ -19,7 +24,9 @@ noise_all = np.random.normal(0, 0.2, size=x_all.shape)  # 生成噪声
 y_all = y_true_all + noise_all  # 添加噪声的观测值
 
 # 分割为训练集和测试集（随机采样）
-train_indices = np.random.choice(len(x_all), 30, replace=False)  # 随机选择30个点作为训练集
+train_indices = np.random.choice(
+    len(x_all), 30, replace=False
+)  # 随机选择30个点作为训练集
 test_indices = np.setdiff1d(np.arange(len(x_all)), train_indices)  # 剩余点作为测试集
 
 x_train = x_all[train_indices]
@@ -57,37 +64,37 @@ plt.figure(figsize=(18, 5))
 
 # 绘制线性拟合
 plt.subplot(1, 3, 1)
-plt.scatter(x_train, y_train, c='blue', alpha=0.6, label='训练数据点')
-plt.scatter(x_test, y_test, c='green', alpha=0.6, label='测试数据点')
-plt.plot(x_plot, linear_fit(x_plot), 'r-', label='线性拟合')
-plt.plot(x_plot, true_function(x_plot), 'k--', label='真实函数')
-plt.title('线性拟合')
-plt.xlabel('x')
-plt.ylabel('y')
+plt.scatter(x_train, y_train, c="blue", alpha=0.6, label="训练数据点")
+plt.scatter(x_test, y_test, c="green", alpha=0.6, label="测试数据点")
+plt.plot(x_plot, linear_fit(x_plot), "r-", label="线性拟合")
+plt.plot(x_plot, true_function(x_plot), "k--", label="真实函数")
+plt.title("线性拟合")
+plt.xlabel("x")
+plt.ylabel("y")
 plt.ylim(0, 3.5)
 plt.grid(True, alpha=0.3)
 plt.legend()
 
 # 绘制3阶多项式拟合
 plt.subplot(1, 3, 2)
-plt.scatter(x_train, y_train, c='blue', alpha=0.6, label='训练数据点')
-plt.scatter(x_test, y_test, c='green', alpha=0.6, label='测试数据点')
-plt.plot(x_plot, poly3_fit(x_plot), 'r-', label='3阶多项式拟合')
-plt.plot(x_plot, true_function(x_plot), 'k--', label='真实函数')
-plt.title('3阶多项式拟合')
-plt.xlabel('x')
+plt.scatter(x_train, y_train, c="blue", alpha=0.6, label="训练数据点")
+plt.scatter(x_test, y_test, c="green", alpha=0.6, label="测试数据点")
+plt.plot(x_plot, poly3_fit(x_plot), "r-", label="3阶多项式拟合")
+plt.plot(x_plot, true_function(x_plot), "k--", label="真实函数")
+plt.title("3阶多项式拟合")
+plt.xlabel("x")
 plt.ylim(0, 3.5)
 plt.grid(True, alpha=0.3)
 plt.legend()
 
 # 绘制9阶多项式拟合 - 过拟合示例
 plt.subplot(1, 3, 3)
-plt.scatter(x_train, y_train, c='blue', alpha=0.6, label='训练数据点')
-plt.scatter(x_test, y_test, c='green', alpha=0.6, label='测试数据点')
-plt.plot(x_plot, poly9_fit(x_plot), 'r-', label='9阶多项式拟合')
-plt.plot(x_plot, true_function(x_plot), 'k--', label='真实函数')
-plt.title('9阶多项式拟合（过拟合）')
-plt.xlabel('x')
+plt.scatter(x_train, y_train, c="blue", alpha=0.6, label="训练数据点")
+plt.scatter(x_test, y_test, c="green", alpha=0.6, label="测试数据点")
+plt.plot(x_plot, poly9_fit(x_plot), "r-", label="9阶多项式拟合")
+plt.plot(x_plot, true_function(x_plot), "k--", label="真实函数")
+plt.title("9阶多项式拟合（过拟合）")
+plt.xlabel("x")
 plt.ylim(0, 3.5)
 plt.grid(True, alpha=0.3)
 plt.legend()
@@ -119,3 +126,136 @@ print("\n模型误差比较:")
 print(f"线性拟合 - 训练集MSE: {linear_train_mse:.4f}, 测试集MSE: {linear_test_mse:.4f}")
 print(f"3阶多项式 - 训练集MSE: {poly3_train_mse:.4f}, 测试集MSE: {poly3_test_mse:.4f}")
 print(f"9阶多项式 - 训练集MSE: {poly9_train_mse:.4f}, 测试集MSE: {poly9_test_mse:.4f}")
+
+"""
+5.4
+"""
+lr = 7.5e-2
+epoch = 200
+eps = 1e-6
+
+
+def model(x, theta):
+    return np.vander(x, theta.shape[-1], increasing=True) @ theta
+
+
+def loss(x, theta, y):
+    return calculate_mse(model(x, theta), y)
+
+
+def cal_grad(f, X, eps):
+    grad = np.zeros_like(X, dtype=float)
+    it = np.nditer(X, flags=["multi_index"])
+    while not it.finished:
+        idx = it.multi_index
+        X_eps_0 = X.copy()
+        X_eps_1 = X.copy()
+        X_eps_0[it.multi_index] -= eps
+        X_eps_1[it.multi_index] += eps
+        grad[idx] = (f(X_eps_1) - f(X_eps_0)) / eps
+        it.iternext()
+    return grad
+
+
+def train(x_train, y_train, theta, x_test, y_test, lr, epoch, eps):
+    losses_train = []
+    losses_test = []
+    for _ in range(epoch):
+        losses_train.append(loss(x_train, theta, y_train))
+        losses_test.append(loss(x_test, theta, y_test))
+        grad = cal_grad(lambda theta_: loss(x_train, theta_, y_train), theta, eps)
+        theta -= lr * grad / np.linalg.norm(grad)
+    return theta, losses_train, losses_test
+
+
+fig = plt.figure(figsize=(18, 5))
+
+n = 1
+theta = np.random.randn(n + 1)
+theta, losses_train, losses_test = train(
+    x_train, y_train, theta, x_test, y_test, lr, epoch, eps
+)
+print(f"n = {n}, theta = {theta}")
+plt.subplot(1, 3, 1)
+plt.plot(
+    range(len(losses_train)),
+    np.log(losses_train),
+    linestyle="-",
+    c="blue",
+    alpha=0.6,
+    label="train loss",
+)
+plt.plot(
+    range(len(losses_test)),
+    np.log(losses_test),
+    linestyle="--",
+    c="red",
+    alpha=0.6,
+    label="test loss",
+)
+plt.title(f"n = {n}")
+plt.xlabel("Epoch")
+plt.ylabel("Loss (LMSE)")
+plt.grid(True, alpha=0.3)
+plt.legend()
+
+n = 3
+theta = np.random.randn(n + 1)
+theta, losses_train, losses_test = train(
+    x_train, y_train, theta, x_test, y_test, lr, epoch, eps
+)
+print(f"n = {n}, theta = {theta}")
+plt.subplot(1, 3, 2)
+plt.plot(
+    range(len(losses_train)),
+    np.log(losses_train),
+    linestyle="-",
+    c="blue",
+    alpha=0.6,
+    label="train loss",
+)
+plt.plot(
+    range(len(losses_test)),
+    np.log(losses_test),
+    linestyle="--",
+    c="red",
+    alpha=0.6,
+    label="test loss",
+)
+plt.title(f"n = {n}")
+plt.xlabel("Epoch")
+plt.ylabel("Loss (LMSE)")
+plt.grid(True, alpha=0.3)
+plt.legend()
+
+n = 9
+theta = np.random.randn(n + 1)
+theta, losses_train, losses_test = train(
+    x_train, y_train, theta, x_test, y_test, lr, epoch, eps
+)
+print(f"n = {n}, theta = {theta}")
+plt.subplot(1, 3, 3)
+plt.plot(
+    range(len(losses_train)),
+    np.log(losses_train),
+    linestyle="-",
+    c="blue",
+    alpha=0.6,
+    label="train loss",
+)
+plt.plot(
+    range(len(losses_test)),
+    np.log(losses_test),
+    linestyle="--",
+    c="red",
+    alpha=0.6,
+    label="test loss",
+)
+plt.title(f"n = {n}")
+plt.xlabel("Epoch")
+plt.ylabel("Loss (LMSE)")
+plt.grid(True, alpha=0.3)
+plt.legend()
+
+plt.tight_layout()
+plt.show()
