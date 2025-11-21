@@ -275,7 +275,8 @@ class LeNet:
 #     MNIST 数据加载
 # =========================
 
-url_base = "http://yann.lecun.com/exdb/mnist/"
+# url_base = "http://yann.lecun.com/exdb/mnist/"
+url_base = "https://storage.googleapis.com/cvdf-datasets/mnist/"  # //
 files = {
     "train_images": "train-images-idx3-ubyte.gz",
     "train_labels": "train-labels-idx1-ubyte.gz",
@@ -359,7 +360,7 @@ def test_model(lenet, test_images, test_labels):
 # =========================
 if __name__ == "__main__":
     # 如果你本地还没有数据，可以先运行一次：
-    # download_mnist()
+    download_mnist()
 
     train_images = load_images(files["train_images"])
     train_labels = load_labels(files["train_labels"])
