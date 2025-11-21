@@ -110,7 +110,9 @@ class LeNet:
                             :,
                             h_start : h_start + kH,
                             w_start : w_start + kW,
-                        ] += dout[b_idx, oc, i, j] * W[oc]
+                        ] += (
+                            dout[b_idx, oc, i, j] * W[oc]
+                        )
 
         if padding > 0:
             dx = dx_padded[:, :, padding:-padding, padding:-padding]
@@ -308,6 +310,7 @@ def load_labels(filename):
 #     训练与测试函数
 # =========================
 
+
 def train_model(lenet, train_images, train_labels, epochs=1, batch_size=64, lr=0.01):
     num_samples = train_images.shape[0]
     for epoch in range(epochs):
@@ -341,10 +344,7 @@ def train_model(lenet, train_images, train_labels, epochs=1, batch_size=64, lr=0
             # 反向传播 + 更新
             lenet.backward(dprobs, lr=lr)
 
-        print(
-            f"Epoch {epoch + 1}/{epochs}, "
-            f"Loss: {running_loss / num_batches:.4f}"
-        )
+        print(f"Epoch {epoch + 1}/{epochs}, " f"Loss: {running_loss / num_batches:.4f}")
 
 
 def test_model(lenet, test_images, test_labels):
@@ -366,7 +366,7 @@ if __name__ == "__main__":
     test_images = load_images(files["test_images"])
     test_labels = load_labels(files["test_labels"])
 
-        # ===== 只用前 10000 个样本做训练（速度立刻快 6 倍左右）=====
+    # ===== 只用前 10000 个样本做训练（速度立刻快 6 倍左右）=====
     N = 10000
     train_images = train_images[:N]
     train_labels = train_labels[:N]
