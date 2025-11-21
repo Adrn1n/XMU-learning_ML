@@ -270,13 +270,60 @@ class LeNet:
         self.conv1_weights -= lr * dWc1
         self.conv1_bias -= lr * dbc1
 
+    """
+    /*
+    */
+    """
+
+    def get_channel_L1(self, layer):
+        if layer == 1:
+            return np.sum(np.abs(self.conv1_weights), axis=(1, 2, 3))
+        elif layer == 2:
+            return np.sum(np.abs(self.conv2_weights), axis=(1, 2, 3))
+        else:
+            raise ValueError
+
+    """
+    /*
+    */
+    """
+
+    def get_channel_imprt(self, layer):
+        return self.get_channel_L1(layer)
+
+    """
+    /*
+    */
+    """
+
+    def prune_channels_ratio(self, layer, methord, prune_ratio):
+        if prune_ratio > 0:
+            if prune_ratio < 1:
+                imprt = methord(layer)
+                idxs = np.argsort(imprt)[: int(len(imprt) * prune_ratio)]
+                if layer == 1:
+                    self.conv1_weights = np.delete(self.conv1_weights, idxs, 0)
+                    self.conv1_bias = np.delete(self.conv1_bias, idxs)
+                    self.conv2_weights = np.delete(self.conv2_weights, idxs, 1)
+                    return self
+                elif layer == 2:
+                    k = (self.fc1_weights.shape[0]) // (self.conv2_bias.shape[0])
+                    fc1_idxs = []
+                    for i in idxs:
+                        fc1_idxs += range(k * i, k * (i + 1))
+                    self.conv2_weights = np.delete(self.conv2_weights, idxs, 0)
+                    self.conv2_bias = np.delete(self.conv2_bias, idxs)
+                    self.fc1_weights = np.delete(self.fc1_weights, fc1_idxs, 0)
+                    return self
+        raise ValueError
+
 
 # =========================
 #     MNIST 数据加载
 # =========================
 
 # url_base = "http://yann.lecun.com/exdb/mnist/"
-url_base = "https://storage.googleapis.com/cvdf-datasets/mnist/"  # //
+url_base = "https://storage.googleapis.com/cvdf-datasets/mnist/"
 files = {
     "train_images": "train-images-idx3-ubyte.gz",
     "train_labels": "train-labels-idx1-ubyte.gz",
@@ -360,7 +407,7 @@ def test_model(lenet, test_images, test_labels):
 # =========================
 if __name__ == "__main__":
     # 如果你本地还没有数据，可以先运行一次：
-    download_mnist()
+    # download_mnist()
 
     train_images = load_images(files["train_images"])
     train_labels = load_labels(files["train_labels"])
@@ -375,5 +422,13 @@ if __name__ == "__main__":
     lenet = LeNet()
 
     # 为了不太慢，先跑 1 个 epoch 试试，确认代码无误
+    train_model(lenet, train_images, train_labels, epochs=1, batch_size=64, lr=0.01)
+    test_model(lenet, test_images, test_labels)
+
+    """
+    /*
+    */
+    """
+    lenet.prune_channels_ratio(1, lenet.get_channel_imprt, 0.5)
     train_model(lenet, train_images, train_labels, epochs=1, batch_size=64, lr=0.01)
     test_model(lenet, test_images, test_labels)
