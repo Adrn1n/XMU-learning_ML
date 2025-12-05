@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 # 0. Generate synthetic data
 # ===========================
 
+
 def generate_sine_series(n_points=2000, noise_std=0.1, seed=0):
     rng = np.random.RandomState(seed)
     t = np.linspace(0, 40 * np.pi, n_points)  # long time range
@@ -23,8 +24,8 @@ def make_windows(series, seq_len=20):
     X = []
     y = []
     for i in range(len(series) - seq_len):
-        X.append(series[i:i+seq_len])
-        y.append(series[i+seq_len])
+        X.append(series[i : i + seq_len])
+        y.append(series[i + seq_len])
     X = np.array(X)  # [N, seq_len]
     y = np.array(y)  # [N]
     # reshape to [N, seq_len, 1] for RNN input
@@ -36,6 +37,7 @@ def make_windows(series, seq_len=20):
 # =========================================
 # 1. Vanilla RNN implemented with NumPy
 # =========================================
+
 
 class SimpleRNN:
     def __init__(self, input_size=1, hidden_size=32, learning_rate=0.001, seed=0):
@@ -83,10 +85,7 @@ class SimpleRNN:
         # TODO: compute y_pred = Wy h_T + by
         y_pred = self.Wy @ h_T + self.by  # [1, 1]
 
-        cache = {
-            "x_seq": x_seq,
-            "h_list": h_list
-        }
+        cache = {"x_seq": x_seq, "h_list": h_list}
         return y_pred, cache
 
     def backward(self, y_pred, y_true, cache):
@@ -112,12 +111,12 @@ class SimpleRNN:
         # --------- Gradients at output layer ----------
         # Loss: L = 0.5 * (y_pred - y_true)^2
         # TODO: dL/dy_pred
-        dL_dy = (y_pred - y_true)  # [1, 1]
+        dL_dy = y_pred - y_true  # [1, 1]
 
         h_T = h_list[-1]  # [H, 1]
         # TODO: dWy, dby, and gradient w.r.t. h_T
-        dWy += dL_dy @ h_T.T      # [1, H]
-        dby += dL_dy              # [1, 1]
+        dWy += dL_dy @ h_T.T  # [1, H]
+        dby += dL_dy  # [1, 1]
         dh_next = self.Wy.T @ dL_dy  # [H, 1], gradient wrt h_T
 
         # --------- BPTT through time ----------
@@ -125,30 +124,24 @@ class SimpleRNN:
         for t in reversed(range(T)):
             h_t = h_list[t]
             x_t = x_seq[t].reshape(D, 1)
-            h_prev = h_list[t-1] if t > 0 else np.zeros_like(h_t)
+            h_prev = h_list[t - 1] if t > 0 else np.zeros_like(h_t)
 
             # dh includes gradient from future time steps
             dh = dh_next
 
             # Derivative of tanh: d(tanh)/da = 1 - h^2
             # TODO: compute delta_t = dh * (1 - h_t^2)
-            delta_t = dh * (1.0 - h_t ** 2)  # [H, 1]
+            delta_t = dh * (1.0 - h_t**2)  # [H, 1]
 
             # Gradients for parameters
-            dWx += delta_t @ x_t.T      # [H, D]
-            dWh += delta_t @ h_prev.T   # [H, H]
-            dbh += delta_t             # [H, 1]
+            dWx += delta_t @ x_t.T  # [H, D]
+            dWh += delta_t @ h_prev.T  # [H, H]
+            dbh += delta_t  # [H, 1]
 
             # Propagate gradient to previous hidden state
             dh_next = self.Wh.T @ delta_t  # [H, 1]
 
-        grads = {
-            "dWx": dWx,
-            "dWh": dWh,
-            "dbh": dbh,
-            "dWy": dWy,
-            "dby": dby
-        }
+        grads = {"dWx": dWx, "dWh": dWh, "dbh": dbh, "dWy": dWy, "dby": dby}
         return grads
 
     def update_params(self, grads):
@@ -163,6 +156,7 @@ class SimpleRNN:
 # =========================================
 # 2. Training utilities
 # =========================================
+
 
 def train_rnn(model, X_train, y_train, n_epochs=20):
     """
@@ -179,7 +173,7 @@ def train_rnn(model, X_train, y_train, n_epochs=20):
 
         total_loss = 0.0
         for idx in indices:
-            x_seq = X_train[idx]        # [T, 1]
+            x_seq = X_train[idx]  # [T, 1]
             y_true = y_train[idx].reshape(1, 1)  # [1, 1]
 
             # Forward
@@ -255,10 +249,10 @@ if __name__ == "__main__":
     test_start_idx = split + seq_len
     time_idx = np.arange(test_start_idx, test_start_idx + n_show)
 
-    plt.plot(time_idx, series[test_start_idx:test_start_idx + n_show],
-             label="True series")
-    plt.plot(time_idx, y_pred_test[:n_show],
-             label="RNN prediction (1-step ahead)")
+    plt.plot(
+        time_idx, series[test_start_idx : test_start_idx + n_show], label="True series"
+    )
+    plt.plot(time_idx, y_pred_test[:n_show], label="RNN prediction (1-step ahead)")
     plt.xlabel("Time index")
     plt.ylabel("Value")
     plt.legend()
