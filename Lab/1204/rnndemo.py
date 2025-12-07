@@ -259,3 +259,89 @@ if __name__ == "__main__":
     plt.title("Vanilla RNN – Sine Wave One-step Prediction")
     plt.tight_layout()
     plt.show()
+
+    """
+    /*
+    */
+    """
+    import matplotlib.gridspec as gridspec
+
+    fig = plt.figure(figsize=(3 * 8, 2 * 6))
+    gs = gridspec.GridSpec(3, 2)
+
+    ax1 = fig.add_subplot(gs[0, :])
+    ax1.plot(
+        time_idx, series[test_start_idx : test_start_idx + n_show], label="True series"
+    )
+    ax1.plot(time_idx, y_pred_test[:n_show], label="RNN prediction (1-step ahead)")
+    ax1.set_title("base")
+    ax1.set_xlabel("Time index")
+    ax1.set_ylabel("Value")
+    ax1.legend()
+
+    hidden_size = int(32 / 2)
+    model = SimpleRNN(
+        input_size=1, hidden_size=hidden_size, learning_rate=0.001, seed=0
+    )
+    losses = train_rnn(model, X_train, y_train, n_epochs=20)
+    mse, y_pred_test = evaluate_rnn(model, X_test, y_test)
+    print("Test MSE:", mse)
+    ax2_1 = fig.add_subplot(gs[1, 0])
+    ax2_1.plot(
+        time_idx, series[test_start_idx : test_start_idx + n_show], label="True series"
+    )
+    ax2_1.plot(time_idx, y_pred_test[:n_show], label="RNN prediction (1-step ahead)")
+    ax2_1.set_title("-neuron")
+    ax2_1.set_xlabel("Time index")
+    ax2_1.set_ylabel("Value")
+    ax2_1.legend()
+
+    hidden_size = int(32 * 2)
+    model = SimpleRNN(
+        input_size=1, hidden_size=hidden_size, learning_rate=0.001, seed=0
+    )
+    losses = train_rnn(model, X_train, y_train, n_epochs=20)
+    mse, y_pred_test = evaluate_rnn(model, X_test, y_test)
+    print("Test MSE:", mse)
+    ax2_2 = fig.add_subplot(gs[1, 1])
+    ax2_2.plot(
+        time_idx, series[test_start_idx : test_start_idx + n_show], label="True series"
+    )
+    ax2_2.plot(time_idx, y_pred_test[:n_show], label="RNN prediction (1-step ahead)")
+    ax2_2.set_title("+neuron")
+    ax2_2.set_xlabel("Time index")
+    ax2_2.set_ylabel("Value")
+    ax2_2.legend()
+
+    lr = 0.001 * 0.1
+    model = SimpleRNN(input_size=1, hidden_size=32, learning_rate=lr, seed=0)
+    losses = train_rnn(model, X_train, y_train, n_epochs=20)
+    mse, y_pred_test = evaluate_rnn(model, X_test, y_test)
+    print("Test MSE:", mse)
+    ax3_1 = fig.add_subplot(gs[2, 0])
+    ax3_1.plot(
+        time_idx, series[test_start_idx : test_start_idx + n_show], label="True series"
+    )
+    ax3_1.plot(time_idx, y_pred_test[:n_show], label="RNN prediction (1-step ahead)")
+    ax3_1.set_title("-learning_rate")
+    ax3_1.set_xlabel("Time index")
+    ax3_1.set_ylabel("Value")
+    ax3_1.legend()
+
+    lr = 0.001 * 10
+    model = SimpleRNN(input_size=1, hidden_size=32, learning_rate=lr, seed=0)
+    losses = train_rnn(model, X_train, y_train, n_epochs=20)
+    mse, y_pred_test = evaluate_rnn(model, X_test, y_test)
+    print("Test MSE:", mse)
+    ax3_2 = fig.add_subplot(gs[2, 1])
+    ax3_2.plot(
+        time_idx, series[test_start_idx : test_start_idx + n_show], label="True series"
+    )
+    ax3_2.plot(time_idx, y_pred_test[:n_show], label="RNN prediction (1-step ahead)")
+    ax3_2.set_title("+learning_rate")
+    ax3_2.set_xlabel("Time index")
+    ax3_2.set_ylabel("Value")
+    ax3_2.legend()
+    plt.title("Vanilla RNN – Sine Wave One-step Prediction")
+    plt.tight_layout()
+    plt.show()
