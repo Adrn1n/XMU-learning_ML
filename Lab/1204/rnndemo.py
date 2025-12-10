@@ -342,6 +342,268 @@ if __name__ == "__main__":
     ax3_2.set_xlabel("Time index")
     ax3_2.set_ylabel("Value")
     ax3_2.legend()
-    plt.title("Vanilla RNN – Sine Wave One-step Prediction")
+
+    fig.suptitle("Vanilla RNN – Sine Wave One-step Prediction")
+    plt.tight_layout()
+    plt.show()
+
+    def sigmoid(x):
+        return 1 / (1 + np.exp(-x))
+
+    class SimpleLSTM:
+        def __init__(self, input_size, hidden_size, learning_rate, seed, output_size):
+            rng = np.random.RandomState(seed)
+            self.input_size = input_size
+            self.hidden_size = hidden_size
+            self.lr = learning_rate
+            self.output_size = output_size
+
+            self.Wf = rng.randn(hidden_size, hidden_size + input_size) * 0.1
+            self.Wi = rng.randn(hidden_size, hidden_size + input_size) * 0.1
+            self.WC_ = rng.randn(hidden_size, hidden_size + input_size) * 0.1
+            self.WO = rng.randn(hidden_size, hidden_size + input_size) * 0.1
+            self.bf = np.zeros([hidden_size, 1])
+            self.bi = np.zeros([hidden_size, 1])
+            self.bC_ = np.zeros([hidden_size, 1])
+            self.bO = np.zeros([hidden_size, 1])
+
+            self.Wy = rng.randn(output_size, hidden_size) * 0.1
+            self.by = np.zeros([output_size, 1])
+
+        def forward(self, x_seq):
+            T, D = x_seq.shape
+            H = self.hidden_size
+
+            h_list = []
+            C_list = []
+            f_list = []
+            i_list = []
+            C__list = []
+            O_list = []
+            h_prev = np.zeros([H, 1])
+            C_prev = np.zeros([H, 1])
+
+            for t in range(T):
+                X_t = np.vstack([h_prev, x_seq[t].reshape(D, 1)])
+                f_t = sigmoid(self.Wf @ X_t + self.bf)
+                i_t = sigmoid(self.Wi @ X_t + self.bi)
+                C__t = np.tanh(self.WC_ @ X_t + self.bC_)
+                O_t = sigmoid(self.WO @ X_t + self.bO)
+
+                C_prev = C_prev * f_t + i_t * C__t
+                h_prev = O_t * np.tanh(C_prev)
+                h_list.append(h_prev)
+                C_list.append(C_prev)
+                f_list.append(f_t)
+                i_list.append(i_t)
+                C__list.append(C__t)
+                O_list.append(O_t)
+
+            h_T = h_list[-1]
+            y_pred = self.Wy @ h_T + self.by
+
+            cache = {
+                "x_seq": x_seq,
+                "h_list": h_list,
+                "C_list": C_list,
+                "f_list": f_list,
+                "i_list": i_list,
+                "C__list": C__list,
+                "O_list": O_list,
+            }
+            return y_pred, cache
+
+        def backward(self, y_pred, y_true, cache):
+            x_seq = cache["x_seq"]
+            h_list = cache["h_list"]
+            C_list = cache["C_list"]
+            f_list = cache["f_list"]
+            i_list = cache["i_list"]
+            C__list = cache["C__list"]
+            O_list = cache["O_list"]
+
+            T, D = x_seq.shape
+            H = self.hidden_size
+
+            dWf = np.zeros_like(self.Wf)
+            dWi = np.zeros_like(self.Wi)
+            dWC_ = np.zeros_like(self.WC_)
+            dWO = np.zeros_like(self.WO)
+            dbf = np.zeros_like(self.bf)
+            dbi = np.zeros_like(self.bi)
+            dbC_ = np.zeros_like(self.bC_)
+            dbO = np.zeros_like(self.bO)
+            dWy = np.zeros_like(self.Wy)
+            dby = np.zeros_like(self.by)
+
+            dL_dy = y_pred - y_true
+
+            h_T = h_list[-1]
+            dWy += dL_dy @ h_T.T
+            dby += dL_dy
+            dh_next = self.Wy.T @ dL_dy
+            dC_next = np.zeros_like(dh_next)
+
+            for t in reversed(range(T)):
+                h_t = h_list[t]
+                C_t = C_list[t]
+                f_t = f_list[t]
+                i_t = i_list[t]
+                C__t = C__list[t]
+                O_t = O_list[t]
+                X_t = x_seq[t].reshape(D, 1)
+                h_prev = h_list[t - 1] if t > 0 else np.zeros_like(h_t)
+                C_prev = C_list[t - 1] if t > 0 else np.zeros_like(C_t)
+                X_t = np.vstack([h_prev, X_t])
+
+                dh = dh_next
+                dC = dC_next
+
+                dC += dh * O_t * (1 - np.tanh(C_t) ** 2)
+                dO_t = dh * np.tanh(C_t) * (O_t * (1 - O_t))
+                dC__t = dC * i_t * (1 - C__t**2)
+                di_t = dC * C__t * (i_t * (1 - i_t))
+                df_t = dC * C_prev * (f_t * (1 - f_t))
+
+                dWO += dO_t @ X_t.T
+                dWC_ += dC__t @ X_t.T
+                dWi += di_t @ X_t.T
+                dWf += df_t @ X_t.T
+                dbO += dO_t
+                dbC_ += dC__t
+                dbi += di_t
+                dbf += df_t
+
+                dh_next = (
+                    self.WO[:, :H].T @ dO_t
+                    + self.WC_[:, :H].T @ dC__t
+                    + self.Wi[:, :H].T @ di_t
+                    + self.Wf[:, :H].T @ df_t
+                )
+                dC_next = dC * f_t
+
+            grads = {
+                "dWf": dWf,
+                "dWi": dWi,
+                "dWC_": dWC_,
+                "dWO": dWO,
+                "dbf": dbf,
+                "dbi": dbi,
+                "dbC_": dbC_,
+                "dbO": dbO,
+                "dWy": dWy,
+                "dby": dby,
+            }
+            return grads
+
+        def update_params(self, grads):
+            self.Wf -= self.lr * grads["dWf"]
+            self.Wi -= self.lr * grads["dWi"]
+            self.WC_ -= self.lr * grads["dWC_"]
+            self.WO -= self.lr * grads["dWO"]
+            self.bf -= self.lr * grads["dbf"]
+            self.bi -= self.lr * grads["dbi"]
+            self.bC_ -= self.lr * grads["dbC_"]
+            self.bO -= self.lr * grads["dbO"]
+            self.Wy -= self.lr * grads["dWy"]
+            self.by -= self.lr * grads["dby"]
+
+    model = SimpleLSTM(
+        input_size=1, hidden_size=32, learning_rate=0.001, seed=0, output_size=1
+    )
+    losses = train_rnn(model, X_train, y_train, n_epochs=20)
+    mse, y_pred_test = evaluate_rnn(model, X_test, y_test)
+    print("Test MSE:", mse)
+
+    fig = plt.figure(figsize=(3 * 8, 2 * 6))
+    gs = gridspec.GridSpec(3, 2)
+
+    ax1 = fig.add_subplot(gs[0, :])
+    ax1.plot(
+        time_idx, series[test_start_idx : test_start_idx + n_show], label="True series"
+    )
+    ax1.plot(time_idx, y_pred_test[:n_show], label="LSTM prediction (1-step ahead)")
+    ax1.set_title("base")
+    ax1.set_xlabel("Time index")
+    ax1.set_ylabel("Value")
+    ax1.legend()
+
+    hidden_size = int(32 / 2)
+    model = SimpleLSTM(
+        input_size=1,
+        hidden_size=hidden_size,
+        learning_rate=0.001,
+        seed=0,
+        output_size=1,
+    )
+    losses = train_rnn(model, X_train, y_train, n_epochs=20)
+    mse, y_pred_test = evaluate_rnn(model, X_test, y_test)
+    print("Test MSE:", mse)
+    ax2_1 = fig.add_subplot(gs[1, 0])
+    ax2_1.plot(
+        time_idx, series[test_start_idx : test_start_idx + n_show], label="True series"
+    )
+    ax2_1.plot(time_idx, y_pred_test[:n_show], label="LSTM prediction (1-step ahead)")
+    ax2_1.set_title("-neuron")
+    ax2_1.set_xlabel("Time index")
+    ax2_1.set_ylabel("Value")
+    ax2_1.legend()
+
+    hidden_size = int(32 * 2)
+    model = SimpleLSTM(
+        input_size=1,
+        hidden_size=hidden_size,
+        learning_rate=0.001,
+        seed=0,
+        output_size=1,
+    )
+    losses = train_rnn(model, X_train, y_train, n_epochs=20)
+    mse, y_pred_test = evaluate_rnn(model, X_test, y_test)
+    print("Test MSE:", mse)
+    ax2_2 = fig.add_subplot(gs[1, 1])
+    ax2_2.plot(
+        time_idx, series[test_start_idx : test_start_idx + n_show], label="True series"
+    )
+    ax2_2.plot(time_idx, y_pred_test[:n_show], label="LSTM prediction (1-step ahead)")
+    ax2_2.set_title("+neuron")
+    ax2_2.set_xlabel("Time index")
+    ax2_2.set_ylabel("Value")
+    ax2_2.legend()
+
+    lr = 0.001 * 0.1
+    model = SimpleLSTM(
+        input_size=1, hidden_size=32, learning_rate=lr, seed=0, output_size=1
+    )
+    losses = train_rnn(model, X_train, y_train, n_epochs=20)
+    mse, y_pred_test = evaluate_rnn(model, X_test, y_test)
+    print("Test MSE:", mse)
+    ax3_1 = fig.add_subplot(gs[2, 0])
+    ax3_1.plot(
+        time_idx, series[test_start_idx : test_start_idx + n_show], label="True series"
+    )
+    ax3_1.plot(time_idx, y_pred_test[:n_show], label="LSTM prediction (1-step ahead)")
+    ax3_1.set_title("-learning_rate")
+    ax3_1.set_xlabel("Time index")
+    ax3_1.set_ylabel("Value")
+    ax3_1.legend()
+
+    lr = 0.001 * 10
+    model = SimpleLSTM(
+        input_size=1, hidden_size=32, learning_rate=lr, seed=0, output_size=1
+    )
+    losses = train_rnn(model, X_train, y_train, n_epochs=20)
+    mse, y_pred_test = evaluate_rnn(model, X_test, y_test)
+    print("Test MSE:", mse)
+    ax3_2 = fig.add_subplot(gs[2, 1])
+    ax3_2.plot(
+        time_idx, series[test_start_idx : test_start_idx + n_show], label="True series"
+    )
+    ax3_2.plot(time_idx, y_pred_test[:n_show], label="LSTM prediction (1-step ahead)")
+    ax3_2.set_title("+learning_rate")
+    ax3_2.set_xlabel("Time index")
+    ax3_2.set_ylabel("Value")
+    ax3_2.legend()
+
+    fig.suptitle("LSTM – Sine Wave One-step Prediction")
     plt.tight_layout()
     plt.show()
