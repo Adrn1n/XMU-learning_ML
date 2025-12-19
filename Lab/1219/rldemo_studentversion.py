@@ -126,7 +126,12 @@ class QLearningAgent:
         if exploit_only:
             return self.greedy_action(s)
         # stub: random action (INCORRECT; students must fix)
-        return random.randint(0, 3)
+        # return random.randint(0, 3)
+        return (
+            random.randint(0, 3)
+            if random.random() < (self.epsilon)
+            else self.greedy_action(s)
+        )
         # ===== TODO(A1) END =====
 
     def update(self, s, a, r, s2, done):
@@ -146,8 +151,14 @@ class QLearningAgent:
         # ===== TODO(A2) START =====
         # Replace the stub below with the correct Q-learning update.
         # stub: no learning (INCORRECT; students must fix)
-        _ = (s, a, r, s2, done)
-        return
+        # _ = (s, a, r, s2, done)
+        # return
+        if done:
+            target = r
+        else:
+            target = r + self.gamma * self.value(s2)
+        self.Q[s][a] += self.alpha * (target - (self.Q[s][a]))
+        return self.Q[s]
         # ===== TODO(A2) END =====
 
 
@@ -369,7 +380,12 @@ class RLLabApp(tk.Tk):
                     # If show_heatmap is ON, set fill color based on V(s)=max_a Q(s,a).
                     # Use: self._value_to_color(v, vmin, vmax) where v = vals.get(s, 0.0)
                     # Otherwise set fill = "white".
-                    fill = "white"  # stub (INCORRECT when heatmap is enabled)
+                    # fill = "white"  # stub (INCORRECT when heatmap is enabled)
+                    fill = (
+                        self._value_to_color(vals.get(s, 0), vmin, vmax)
+                        if self.show_heatmap.get()
+                        else "white"
+                    )
                     # ===== TODO(B1) END =====
 
                 self.grid.create_rectangle(x0, y0, x1, y1, fill=fill, outline="#bbb")
@@ -396,6 +412,20 @@ class RLLabApp(tk.Tk):
         #  - Use dx,dy mapping: Up=(0,-d), Right=(d,0), Down=(0,d), Left=(-d,0)
         #
         # NOTE: a correct implementation should show a coherent flow toward goal after training.
+        if self.show_policy_arrows.get():
+            for y in range(self.env.h):
+                for x in range(self.env.w):
+                    s = (x, y)
+                    if s in self.env.obstacles or s == self.env.goal:
+                        continue
+                    d = 18
+                    diag = self._cell_rect(x, y)
+                    o = ((diag[0] + diag[2]) / 2, (diag[1] + diag[3]) / 2)
+                    a = self.agent.greedy_action(s)
+                    dx, dy = {0: (0, -d), 1: (d, 0), 2: (0, d), 3: (-d, 0)}[a]
+                    self.grid.create_line(
+                        o[0], o[1], o[0] + dx, o[1] + dy, arrow=tk.LAST
+                    )
         # ===== TODO(B2) END =====
 
         # Draw agent on top
