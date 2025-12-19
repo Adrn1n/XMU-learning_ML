@@ -36,9 +36,13 @@ class GridWorld:
 
         # Fixed obstacles for lab (do not modify unless instructed)
         self.obstacles = {
-            (2, 0), (2, 1), (2, 2),
-            (4, 3), (4, 4),
-            (1, 4), (2, 4),
+            (2, 0),
+            (2, 1),
+            (2, 2),
+            (4, 3),
+            (4, 4),
+            (1, 4),
+            (2, 4),
         }
 
         self.reset()
@@ -77,7 +81,9 @@ class GridWorld:
 # 2) Agent: Tabular Q-Learning (Students complete A1/A2)
 # =========================================================
 class QLearningAgent:
-    def __init__(self, alpha=0.25, gamma=0.95, epsilon=0.30, eps_min=0.02, eps_decay=0.9995):
+    def __init__(
+        self, alpha=0.25, gamma=0.95, epsilon=0.30, eps_min=0.02, eps_decay=0.9995
+    ):
         self.Q = {}  # dict: state -> [q_up, q_right, q_down, q_left]
         self.alpha = alpha
         self.gamma = gamma
@@ -184,8 +190,14 @@ class RLLabApp(tk.Tk):
         self.pad = 10
         wpx = self.env.w * self.cell + 2 * self.pad
         hpx = self.env.h * self.cell + 2 * self.pad
-        self.grid = tk.Canvas(main, width=wpx, height=hpx, bg="white",
-                              highlightthickness=1, highlightbackground="#bbb")
+        self.grid = tk.Canvas(
+            main,
+            width=wpx,
+            height=hpx,
+            bg="white",
+            highlightthickness=1,
+            highlightbackground="#bbb",
+        )
         self.grid.grid(row=0, column=0, rowspan=3, padx=(0, 12), pady=0)
 
         # Right panel
@@ -194,33 +206,55 @@ class RLLabApp(tk.Tk):
 
         self.status_var = tk.StringVar(value="")
         ttk.Label(panel, text="Status").grid(row=0, column=0, sticky="w")
-        ttk.Label(panel, textvariable=self.status_var, justify="left").grid(row=1, column=0, sticky="w", pady=(2, 10))
+        ttk.Label(panel, textvariable=self.status_var, justify="left").grid(
+            row=1, column=0, sticky="w", pady=(2, 10)
+        )
 
         # Controls
         ttk.Label(panel, text="Controls").grid(row=2, column=0, sticky="w")
         btns = ttk.Frame(panel)
         btns.grid(row=3, column=0, sticky="w", pady=(4, 10))
 
-        ttk.Button(btns, text="Reset Episode", command=self.reset_episode).grid(row=0, column=0, padx=(0, 6), pady=3)
-        ttk.Button(btns, text="Step (ε-greedy)", command=self.step_once).grid(row=0, column=1, padx=(0, 6), pady=3)
-        ttk.Button(btns, text="Run Greedy", command=self.run_greedy).grid(row=1, column=0, padx=(0, 6), pady=3)
-        ttk.Button(btns, text="Stop", command=self.stop_all).grid(row=1, column=1, padx=(0, 6), pady=3)
+        ttk.Button(btns, text="Reset Episode", command=self.reset_episode).grid(
+            row=0, column=0, padx=(0, 6), pady=3
+        )
+        ttk.Button(btns, text="Step (ε-greedy)", command=self.step_once).grid(
+            row=0, column=1, padx=(0, 6), pady=3
+        )
+        ttk.Button(btns, text="Run Greedy", command=self.run_greedy).grid(
+            row=1, column=0, padx=(0, 6), pady=3
+        )
+        ttk.Button(btns, text="Stop", command=self.stop_all).grid(
+            row=1, column=1, padx=(0, 6), pady=3
+        )
 
         # Visualization toggles (Task B)
         vis = ttk.LabelFrame(panel, text="Visualization (Task B)", padding=8)
         vis.grid(row=4, column=0, sticky="we")
 
         self.show_heatmap = tk.BooleanVar(value=True)
-        ttk.Checkbutton(vis, text="Show Value Heatmap (V(s)=max Q)",
-                        variable=self.show_heatmap, command=self._redraw_grid).grid(row=0, column=0, sticky="w")
+        ttk.Checkbutton(
+            vis,
+            text="Show Value Heatmap (V(s)=max Q)",
+            variable=self.show_heatmap,
+            command=self._redraw_grid,
+        ).grid(row=0, column=0, sticky="w")
 
         self.show_value_text = tk.BooleanVar(value=False)
-        ttk.Checkbutton(vis, text="Show numeric V(s) in cells",
-                        variable=self.show_value_text, command=self._redraw_grid).grid(row=1, column=0, sticky="w", pady=(4, 0))
+        ttk.Checkbutton(
+            vis,
+            text="Show numeric V(s) in cells",
+            variable=self.show_value_text,
+            command=self._redraw_grid,
+        ).grid(row=1, column=0, sticky="w", pady=(4, 0))
 
         self.show_policy_arrows = tk.BooleanVar(value=True)
-        ttk.Checkbutton(vis, text="Show greedy policy arrows for all cells",
-                        variable=self.show_policy_arrows, command=self._redraw_grid).grid(row=2, column=0, sticky="w", pady=(4, 0))
+        ttk.Checkbutton(
+            vis,
+            text="Show greedy policy arrows for all cells",
+            variable=self.show_policy_arrows,
+            command=self._redraw_grid,
+        ).grid(row=2, column=0, sticky="w", pady=(4, 0))
 
         # Training
         train = ttk.LabelFrame(panel, text="Training", padding=8)
@@ -228,28 +262,41 @@ class RLLabApp(tk.Tk):
 
         ttk.Label(train, text="Episodes:").grid(row=0, column=0, sticky="w")
         self.train_eps = tk.IntVar(value=500)
-        ttk.Entry(train, textvariable=self.train_eps, width=10).grid(row=0, column=1, sticky="w")
+        ttk.Entry(train, textvariable=self.train_eps, width=10).grid(
+            row=0, column=1, sticky="w"
+        )
 
-        ttk.Label(train, text="Speed (ms/step):").grid(row=1, column=0, sticky="w", pady=(6, 0))
+        ttk.Label(train, text="Speed (ms/step):").grid(
+            row=1, column=0, sticky="w", pady=(6, 0)
+        )
         self.speed = tk.IntVar(value=120)
-        ttk.Scale(train, from_=10, to=600, orient="horizontal", variable=self.speed)\
-            .grid(row=1, column=1, sticky="we", pady=(6, 0))
+        ttk.Scale(
+            train, from_=10, to=600, orient="horizontal", variable=self.speed
+        ).grid(row=1, column=1, sticky="we", pady=(6, 0))
         train.columnconfigure(1, weight=1)
 
         self.render_during_training = tk.BooleanVar(value=True)
-        ttk.Checkbutton(train, text="Render during training", variable=self.render_during_training)\
-            .grid(row=2, column=0, columnspan=2, sticky="w", pady=(6, 0))
+        ttk.Checkbutton(
+            train, text="Render during training", variable=self.render_during_training
+        ).grid(row=2, column=0, columnspan=2, sticky="w", pady=(6, 0))
 
-        ttk.Button(train, text="Train (non-blocking)", command=self.train_start)\
-            .grid(row=3, column=0, columnspan=2, sticky="we", pady=(8, 0))
+        ttk.Button(train, text="Train (non-blocking)", command=self.train_start).grid(
+            row=3, column=0, columnspan=2, sticky="we", pady=(8, 0)
+        )
 
         # Return curve canvas
         curve = ttk.LabelFrame(panel, text="Episode Return Curve", padding=8)
         curve.grid(row=6, column=0, sticky="we", pady=(10, 0))
 
         self.curve_w, self.curve_h = 320, 160
-        self.curve = tk.Canvas(curve, width=self.curve_w, height=self.curve_h,
-                               bg="white", highlightthickness=1, highlightbackground="#bbb")
+        self.curve = tk.Canvas(
+            curve,
+            width=self.curve_w,
+            height=self.curve_h,
+            bg="white",
+            highlightthickness=1,
+            highlightbackground="#bbb",
+        )
         self.curve.grid(row=0, column=0, sticky="we")
 
     # ---------------- Geometry & Color helpers ----------------
@@ -274,8 +321,10 @@ class RLLabApp(tk.Tk):
             t = (v - vmin) / (vmax - vmin)
             t = max(0.0, min(1.0, t))
         r0, g0, b0 = (247, 251, 255)  # light
-        r1, g1, b1 = (8, 48, 107)     # dark
-        return self._rgb_hex(self._lerp(r0, r1, t), self._lerp(g0, g1, t), self._lerp(b0, b1, t))
+        r1, g1, b1 = (8, 48, 107)  # dark
+        return self._rgb_hex(
+            self._lerp(r0, r1, t), self._lerp(g0, g1, t), self._lerp(b0, b1, t)
+        )
 
     def _collect_values(self):
         """Collect V(s) for all non-obstacle states; return dict, vmin, vmax."""
@@ -328,9 +377,13 @@ class RLLabApp(tk.Tk):
                 # Optional numeric V(s)
                 if self.show_value_text.get() and (s not in self.env.obstacles):
                     v = vals.get(s, 0.0)
-                    self.grid.create_text((x0 + x1) / 2, (y0 + y1) / 2,
-                                          text=f"{v:.1f}", fill="#111",
-                                          font=("Arial", 11, "bold"))
+                    self.grid.create_text(
+                        (x0 + x1) / 2,
+                        (y0 + y1) / 2,
+                        text=f"{v:.1f}",
+                        fill="#111",
+                        font=("Arial", 11, "bold"),
+                    )
 
         # ===== TODO(B2) START =====
         # Draw greedy policy arrows for all cells (optional).
@@ -349,7 +402,9 @@ class RLLabApp(tk.Tk):
         ax, ay = self.env.agent
         x0, y0, x1, y1 = self._cell_rect(ax, ay)
         m = 12
-        self.grid.create_oval(x0 + m, y0 + m, x1 - m, y1 - m, fill="#e34a33", outline="")
+        self.grid.create_oval(
+            x0 + m, y0 + m, x1 - m, y1 - m, fill="#e34a33", outline=""
+        )
 
         # Emphasize current greedy direction (thicker arrow)
         s = self.env.agent
@@ -371,9 +426,9 @@ class RLLabApp(tk.Tk):
         c.create_line(margin, h - margin, w - margin, h - margin)
         c.create_line(margin, margin, margin, h - margin)
 
-        data = self.returns[-self.max_curve_points:]
+        data = self.returns[-self.max_curve_points :]
         if not data:
-            c.create_text(w/2, h/2, text="No completed episodes yet", fill="#666")
+            c.create_text(w / 2, h / 2, text="No completed episodes yet", fill="#666")
             return
 
         ymin, ymax = min(data), max(data)
@@ -384,22 +439,30 @@ class RLLabApp(tk.Tk):
         n = len(data)
         xs, ys = [], []
         for i, r in enumerate(data):
-            x = margin + (w - 2*margin) * (i / max(1, n - 1))
+            x = margin + (w - 2 * margin) * (i / max(1, n - 1))
             t = (r - ymin) / (ymax - ymin)
-            y = (h - margin) - (h - 2*margin) * t
-            xs.append(x); ys.append(y)
+            y = (h - margin) - (h - 2 * margin) * t
+            xs.append(x)
+            ys.append(y)
 
         for i in range(n - 1):
-            c.create_line(xs[i], ys[i], xs[i+1], ys[i+1], width=2)
+            c.create_line(xs[i], ys[i], xs[i + 1], ys[i + 1], width=2)
 
         # marker
-        c.create_oval(xs[-1]-3, ys[-1]-3, xs[-1]+3, ys[-1]+3, fill="#111", outline="")
+        c.create_oval(
+            xs[-1] - 3, ys[-1] - 3, xs[-1] + 3, ys[-1] + 3, fill="#111", outline=""
+        )
 
         # label
         k = min(20, n)
         avg = sum(data[-k:]) / k
-        c.create_text(w - margin, margin, text=f"Last={data[-1]:.1f}  Avg({k})={avg:.1f}",
-                      fill="#111", anchor="ne")
+        c.create_text(
+            w - margin,
+            margin,
+            text=f"Last={data[-1]:.1f}  Avg({k})={avg:.1f}",
+            fill="#111",
+            anchor="ne",
+        )
 
     def _update_status(self):
         self.status_var.set(
