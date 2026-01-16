@@ -14,7 +14,7 @@
               "type": "markdown",
               "state": {
                 "file": "0909.md",
-                "mode": "source",
+                "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
@@ -36,17 +36,17 @@
             }
           },
           {
-            "id": "e7260dd3b16e3b54",
+            "id": "78c33b99cdc7b119",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "1111.md",
+                "file": "1223.md",
                 "mode": "preview",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "1111"
+              "title": "1223"
             }
           }
         ],
@@ -171,13 +171,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "1111.md",
+                "file": "1223.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of 1111"
+              "title": "Outline of 1223"
             }
           }
         ],
@@ -198,25 +198,33 @@
       "bases:Create new base": false
     }
   },
-  "active": "e7260dd3b16e3b54",
+  "active": "78c33b99cdc7b119",
   "lastOpenFiles": [
-    "Assets/hw_h_1mbr6utdhan4gg468d3fcc71eace.png",
+    "1216.md",
+    "1209.md",
+    "1125.md",
+    "1118.md",
+    "1223.md",
     "1111.md",
-    "0923.md",
-    "0909.md",
-    "Assets/ggduim_69130ceaed1f65.20691046.jpg",
     "1104.md",
     "1006.md",
+    "0923.md",
+    "0909.md",
+    "Assets/0_4.jpeg",
+    "Assets/0_3.jpeg",
+    "Assets/37329D1BBAA9D4F091F3F20069BE81E2.jpg",
+    "Assets/0 2.jpeg",
+    "Assets/0_3.jpeg",
+    "Assets/0 copy.jpeg",
+    "Assets/0_2.jpeg",
+    "Assets/0.jpeg",
+    "Assets/Untitled",
+    "Assets/hw_h_1mbr6utdhan4gg468d3fcc71eace.png",
+    "Assets/ggduim_69130ceaed1f65.20691046.jpg",
     "0902.md",
     "Assets/作业 4.pdf",
-    "Assets/hw_h_1mbr6utdhrdw4w868e372dd1567e.png",
-    "Assets/hw_h_1mbr6utdhan4gg468d3fce7a6c87.png",
     "Assets/作业2：线性回归参数的递推更新与卡尔曼滤波思想.pdf",
-    "Assets/hw_h_1mbr6utdgq68sc068c11bf3f0bbf.png",
-    "_page_0_Figure_10.jpeg",
-    "_page_1_Figure_0.jpeg",
     "a.md",
-    "Assets/ggduim_68b7ad5e4eeab6.18515502.jpg",
     "Assets"
   ]
 }
